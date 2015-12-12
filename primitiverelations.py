@@ -449,7 +449,7 @@ def getmaxfans(pv, pr, polytopename):
             numprojective = numprojective+1
             projrelationdata.append(getTuples(m))
             projrelations.append(m)
-    m2fileoutput(pv, a, projrelations[0:2], polytopename)
+    m2fileoutput(pv, a, [projrelations[0],projrelations[8]], polytopename)
     print('Number of nonprojective fans:',numnonprojective)
     print('Number of projective fans:',numprojective)
     print('Projective isomorphism types:')
@@ -517,7 +517,6 @@ def getmaxfans(pv, pr, polytopename):
                         mat.append(pdict[pv[k]])
                 if numpy.linalg.det(mat) != 0:
                     flag = 1
-                print('phoot')
         if (flag==1):
             print('Has isolated ray!')
         else:
@@ -770,9 +769,11 @@ def m2fileoutput(pv, a, relations, polytopename):
     );
     L = select(L, x->((degree(x))#0 > 0));
     filename = concatenate(pname,"milnor.m2");
+    filename << "clearAll;" << endl;
     filename << "v=" << gens(QQRc) << ";" << endl;
+    filename << "R=QQ[v];" << endl;
     filename << "p=" << toString(product(L)) << ";" << endl;
-    filename << "R = QQ[v]; I = ideal(p); J = ideal(jacobian(I)); primaryDecomposition J" << endl;
+    filename << "I = ideal(p); J = ideal(jacobian(I)); hilbertSeries J" << endl;
     filename << close;
     );'''
     with open(filestr1, 'w') as f:
@@ -823,32 +824,32 @@ def m2fileoutput(pv, a, relations, polytopename):
         f.write('ff(v, M, sr);')
     
 
-getmaxfans(pvarsC3, prelationsC3, "C3")
-getmaxfans(pvarsD3, prelationsD3, "D3")
-getmaxfans(pvarsD9, prelationsD9, "D9")
-getmaxfans(pvarsD16, prelationsD16, "D16")
-getmaxfans(pvarsG1, prelationsG1, "G1")
-getmaxfans(pvarsG3, prelationsG3, "G3")
-getmaxfans(pvarsG4, prelationsG4, "G4")
-getmaxfans(pvarsG5, prelationsG5, "G5")
-getmaxfans(pvarsH2, prelationsH2, "H2")
-getmaxfans(pvarsH6, prelationsH6, "H6")
-getmaxfans(pvarsH10, prelationsH10, "H10")
-getmaxfans(pvarsI3, prelationsI3, "I3")
-getmaxfans(pvarsI8, prelationsI8, "I8")
-getmaxfans(pvarsI11, prelationsI11, "I11")
-getmaxfans(pvarsJ1, prelationsJ1, "J1")
-getmaxfans(pvarsJ2, prelationsJ2, "J2")
-getmaxfans(pvarsK2, prelationsK2, "K2")
-getmaxfans(pvarsZ1, prelationsZ1, "Z1")
-getmaxfans(pvarsZ2, prelationsZ2, "Z2")
+#getmaxfans(pvarsC3, prelationsC3, "C3")
+#getmaxfans(pvarsD3, prelationsD3, "D3")
+#getmaxfans(pvarsD9, prelationsD9, "D9")
+#getmaxfans(pvarsD16, prelationsD16, "D16")
+#getmaxfans(pvarsG1, prelationsG1, "G1")
+#getmaxfans(pvarsG3, prelationsG3, "G3")
+#getmaxfans(pvarsG4, prelationsG4, "G4")
+#getmaxfans(pvarsG5, prelationsG5, "G5")
+#getmaxfans(pvarsH2, prelationsH2, "H2")
+#getmaxfans(pvarsH6, prelationsH6, "H6")
+#getmaxfans(pvarsH10, prelationsH10, "H10")
+#getmaxfans(pvarsI3, prelationsI3, "I3")
+#getmaxfans(pvarsI8, prelationsI8, "I8")
+#getmaxfans(pvarsI11, prelationsI11, "I11")
+#getmaxfans(pvarsJ1, prelationsJ1, "J1")
+#getmaxfans(pvarsJ2, prelationsJ2, "J2")
+#getmaxfans(pvarsK2, prelationsK2, "K2")
+#getmaxfans(pvarsZ1, prelationsZ1, "Z1")
+#getmaxfans(pvarsZ2, prelationsZ2, "Z2")
 getmaxfans(pvarsM1, prelationsM1, "M1")
-getmaxfans(pvarsM4, prelationsM4, "M4")
-getmaxfans(pvarsM, prelationsM, "M")
-getmaxfans(pvarsP341, prelationsP341, "P341")
-getmaxfans(pvarsR1, prelationsR1, "R1")
-getmaxfans(pvarsR2, prelationsR2, "R2")
-getmaxfans(pvarsR3, prelationsR3, "R3")
-#getmaxfans(pvarsP358ii, prelationsP358ii)
-#getmaxfans(pvarsP358iii, prelationsP358iii)
-#getmaxfans(pvarsW, prelationsW)
+#getmaxfans(pvarsM4, prelationsM4, "M4")
+#getmaxfans(pvarsM, prelationsM, "M")
+#getmaxfans(pvarsP341, prelationsP341, "P341")
+#getmaxfans(pvarsR1, prelationsR1, "R1")
+#getmaxfans(pvarsR2, prelationsR2, "R2")
+#getmaxfans(pvarsR3, prelationsR3, "R3")
+#getmaxfans(pvarsP358ii, prelationsP358ii, "P358ii")
+#getmaxfans(pvarsP358iii, prelationsP358iii, "P358iii")
+#getmaxfans(pvarsW, prelationsW, "W")
