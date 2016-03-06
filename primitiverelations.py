@@ -105,8 +105,8 @@ pvarsZ2 = variables[1:9]
 prelationsZ2 = [[['x1','x2','x5'],[],[]],[['x1','x2','x6'],['x7'],[1]],
                 [['x2','x4','x5'],['x8'],[1]],
                 [['x2','x4','x6'],['x7','x8'],[1,1]],
-                [['x3','x8','x7'],[],[]],[['x3','x4','x6'],['x1','x5'],[1,1]],
-                [['x3','x4','x7'],['x1'],[1]],[['x3','x6','x8'],['x5'],[1]],
+                [['x3','x8','x7'],['x2'],[1]],[['x3','x4','x6'],[],[]],
+                [['x3','x4','x7'],['x1','x2'],[1,1]],[['x3','x6','x8'],['x2','x5'],[1,1]],
                 [['x1','x8'],['x4'],[1]],[['x5','x7'],['x6'],[1]]]
 
 #note: 3rd primitive relation for M polytopes given in paper has typo
@@ -238,6 +238,7 @@ def rowreduce(m, col, prevpivots, pd, pv, varlist):
 def getmaxfans(pv, pr, polytopename):
     #Get all primitive relations of the form v1+v2+v3=v4+v5
     #and put them into a list
+    print polytopename
     relevantprs = []
     for i in pr:
         if len(i[0])==3 and len(i[1])==2 and set(i[2])==set([1]):
@@ -333,8 +334,12 @@ def getmaxfans(pv, pr, polytopename):
     prlist = []
     #n = 0
     for i in range(len(relevantprs)):
+        #Loop through all possible subsets of the set of relevant primitive relations
+        #Elements of the subset will be primitive relations on which we do wall crossings
         for j in itertools.combinations(relevantprs,i+1):
             flag = 0
+            #Check that the variables in every pair of primitive relations in the current subset
+            #overlap on no more than 3 variables
             for x in itertools.combinations(j,2):
                 s1 = set(x[0][0]).union(set(x[0][1]))
                 s2 = set(x[1][0]).union(set(x[1][1]))
@@ -346,6 +351,7 @@ def getmaxfans(pv, pr, polytopename):
     #print(prlist)
     #print('Number of delta-maximal fans:',n)
     print('Number of delta-maximal fans:',len(prlist)+1)
+    #Generate the cones in the new fans by doing wall-crossings
     for i in prlist:
         newflist = list(ell)
         for j in i:
@@ -449,7 +455,8 @@ def getmaxfans(pv, pr, polytopename):
             numprojective = numprojective+1
             projrelationdata.append(getTuples(m))
             projrelations.append(m)
-    m2fileoutput(pv, a, [projrelations[0],projrelations[8]], polytopename)
+    #Uncomment next line to generate processing files for Macaulay2
+    #m2fileoutput(pv, a, [projrelations[0],projrelations[1]], polytopename)
     print('Number of nonprojective fans:',numnonprojective)
     print('Number of projective fans:',numprojective)
     print('Projective isomorphism types:')
@@ -462,12 +469,14 @@ def getmaxfans(pv, pr, polytopename):
         while i < len(projrelationdata):
             if projrelationdata[i] != projrelationdata[i-1]:
                 k = checkAreIsomorphicTranspose(projrelations[previndex:i])
+                #k = checkAreIsomorphic(projrelations[previndex:i])
                 if (k >1):
                     print k
                 previndex = i
                 counter = counter+k
             i = i+1
         k = checkAreIsomorphicTranspose(projrelations[previndex:i])
+        #k = checkAreIsomorphic(projrelations[previndex:i])
         if (k >1):
             print k
         counter = counter+k
@@ -522,7 +531,22 @@ def getmaxfans(pv, pr, polytopename):
         else:
             print('No isolated ray!')'''
             
-
+#Given rectangular matrix m, get the two matrices
+#formed by sorting each row entry-wise, then sorting the
+#sorted rows, and likewise sorting each column entry-wise
+#and then sorting the columns.  If two matrices m1 and
+#m2 are related by some permutation of rows and columns,
+#then getTuples(m1)==getTuples(m2).  This is a necessary
+#but not sufficient condition.  A simple counterexample
+#to see that it is not sufficient is:
+#m1 = [[1,0,1,0],
+#      [0,1,0,0],
+#      [0,0,1,1],
+#      [0,0,0,1]]
+#m2 = [[1,0,1,0],
+#      [0,1,0,1],
+#      [0,0,1,0],
+#      [0,0,0,1]]
 def getTuples(m):
     rowdata = []
     for i in m:
@@ -538,6 +562,22 @@ def getTuples(m):
     coldata = sorted(coldata)
     return [rowdata,coldata]
 
+#Check if list of rectangular matrices are equivalent
+#up to arbitrary permutation of rows and columns (in other words,
+#arbitrary left and right multiplication by permutation matrices of the
+#appropriate dimensions).
+#The algorithm works by first identifying the "isomorphism class"
+#of each row in the first matrix, where two rows are considered "isomorphic" if they
+#are the same after sorting element-wise.  Then we sort the rows according
+#to their isomorphism class.  (This sorting is not unique since there is no
+#definite order for isomorphic rows.)
+
+#We also sort all of the subsequent matrices in the list with the same method.
+
+#Then we consider all permutations of the sorted first matrix obtained by
+#permuting isomorphic rows.
+#If the permuted first matrix is equivalent to any of the other matrices in the list,
+#then after sorting both matrices by columns, both matrices must be equal.
 def checkAreIsomorphic(relations):
     if (len(relations)==1):
         return 1
@@ -590,7 +630,7 @@ def checkAreIsomorphic(relations):
         return 1+checkAreIsomorphic(newrelations)
 
 def checkAreIsomorphicTranspose(relations):
-    relations = [[[r[j][k] for j in range(len(relations[0]))] for k in range(len(relations[0][0]))] for r in relations]
+    relations = [numpy.array([[r[j][k] for j in range(len(relations[0]))] for k in range(len(relations[0][0]))]) for r in relations]
     return checkAreIsomorphic(relations)
 
 #Determine if list of vectors generates a pointed cone
@@ -757,6 +797,7 @@ def m2fileoutput(pv, a, relations, polytopename):
     QR = R/c;
     QQR = QR/(annihilator((sum(gens(R)))_QR));
     print(numgens(source((basis(QQR)))));
+    if (numgens(source(basis(2,QQR)))==numgens(source(basis(1,QQR)))) then print "ONTO" else print "NOT ONTO";
     ell = basis(1,QQR);
     QQRc = QQR[vars(0..(numgens(source(ell))-1))];
     x = vars(QQRc)*(transpose(ell));
@@ -822,34 +863,33 @@ def m2fileoutput(pv, a, relations, polytopename):
             f.write('}')
         f.write('}"; \n')
         f.write('ff(v, M, sr);')
-    
 
-#getmaxfans(pvarsC3, prelationsC3, "C3")
-#getmaxfans(pvarsD3, prelationsD3, "D3")
-#getmaxfans(pvarsD9, prelationsD9, "D9")
-#getmaxfans(pvarsD16, prelationsD16, "D16")
-#getmaxfans(pvarsG1, prelationsG1, "G1")
-#getmaxfans(pvarsG3, prelationsG3, "G3")
-#getmaxfans(pvarsG4, prelationsG4, "G4")
-#getmaxfans(pvarsG5, prelationsG5, "G5")
-#getmaxfans(pvarsH2, prelationsH2, "H2")
-#getmaxfans(pvarsH6, prelationsH6, "H6")
-#getmaxfans(pvarsH10, prelationsH10, "H10")
-#getmaxfans(pvarsI3, prelationsI3, "I3")
-#getmaxfans(pvarsI8, prelationsI8, "I8")
-#getmaxfans(pvarsI11, prelationsI11, "I11")
-#getmaxfans(pvarsJ1, prelationsJ1, "J1")
-#getmaxfans(pvarsJ2, prelationsJ2, "J2")
-#getmaxfans(pvarsK2, prelationsK2, "K2")
-#getmaxfans(pvarsZ1, prelationsZ1, "Z1")
-#getmaxfans(pvarsZ2, prelationsZ2, "Z2")
+getmaxfans(pvarsC3, prelationsC3, "C3")
+getmaxfans(pvarsD3, prelationsD3, "D3")
+getmaxfans(pvarsD9, prelationsD9, "D9")
+getmaxfans(pvarsD16, prelationsD16, "D16")
+getmaxfans(pvarsG1, prelationsG1, "G1")
+getmaxfans(pvarsG3, prelationsG3, "G3")
+getmaxfans(pvarsG4, prelationsG4, "G4")
+getmaxfans(pvarsG5, prelationsG5, "G5")
+getmaxfans(pvarsH2, prelationsH2, "H2")
+getmaxfans(pvarsH6, prelationsH6, "H6")
+getmaxfans(pvarsH10, prelationsH10, "H10")
+getmaxfans(pvarsI3, prelationsI3, "I3")
+getmaxfans(pvarsI8, prelationsI8, "I8")
+getmaxfans(pvarsI11, prelationsI11, "I11")
+getmaxfans(pvarsJ1, prelationsJ1, "J1")
+getmaxfans(pvarsJ2, prelationsJ2, "J2")
+getmaxfans(pvarsK2, prelationsK2, "K2")
+getmaxfans(pvarsZ1, prelationsZ1, "Z1")
+getmaxfans(pvarsZ2, prelationsZ2, "Z2")
 getmaxfans(pvarsM1, prelationsM1, "M1")
-#getmaxfans(pvarsM4, prelationsM4, "M4")
-#getmaxfans(pvarsM, prelationsM, "M")
-#getmaxfans(pvarsP341, prelationsP341, "P341")
-#getmaxfans(pvarsR1, prelationsR1, "R1")
-#getmaxfans(pvarsR2, prelationsR2, "R2")
-#getmaxfans(pvarsR3, prelationsR3, "R3")
+getmaxfans(pvarsM4, prelationsM4, "M4")
+getmaxfans(pvarsM, prelationsM, "M5")
+getmaxfans(pvarsP341, prelationsP341, "P341")
+getmaxfans(pvarsR1, prelationsR1, "R1")
+getmaxfans(pvarsR2, prelationsR2, "R2")
+getmaxfans(pvarsR3, prelationsR3, "R3")
 #getmaxfans(pvarsP358ii, prelationsP358ii, "P358ii")
-#getmaxfans(pvarsP358iii, prelationsP358iii, "P358iii")
-#getmaxfans(pvarsW, prelationsW, "W")
+getmaxfans(pvarsP358iii, prelationsP358iii, "P358iii")
+getmaxfans(pvarsW, prelationsW, "W")
